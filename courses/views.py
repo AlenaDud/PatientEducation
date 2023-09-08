@@ -1,13 +1,14 @@
 from django.shortcuts import redirect, get_object_or_404
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.views.generic.base import TemplateResponseMixin, View
-from .models import Course, Content, Module
+from .models import Course, Content, Module, Subject
 from .forms import ModuleFormSet
 from django.forms.models import modelform_factory
 from django.apps import apps
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from braces.views import CsrfExemptMixin, JsonRequestResponseMixin
+from django.db.models import Count
 
 
 class OwnerMixin:
@@ -204,5 +205,33 @@ class ContentOrderView(CsrfExemptMixin,
         for id, order in self.request_json.items():
             Content.objects.filter(id=id,
                                    module__course__owner=request.user).update(
-                                   order=order)
+                order=order)
         return self.render_json_response({'saved': 'OK'})
+
+
+class CourseListView(TemplateResponseMixin, View):
+    """Queries all available courses or in the selected subject."""
+
+    model = Course
+    template_name = 'courses/list.html'
+
+    def get(self, request, subject=None):
+        subjects = Subject.objects.annotate(
+            total_courses=Count('courses')
+        )
+        courses = Course.objects.annotate(
+            total_modules=Count('modules')
+        )
+        if subject:
+            subject = get_object_or_404(Subject, slug=subject)
+            courses = courses.filter(subject=subject)
+        return self.render_to_response({'subjects': subjects,
+                                        'subject': subject,
+                                        'courses': courses})
+
+
+class CourseDetailView(DetailView):
+    """Display selected course info."""
+
+    model = Course
+    template_name = 'courses/detail.html'
