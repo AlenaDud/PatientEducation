@@ -1,9 +1,10 @@
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, FormView
+from django.views.generic import CreateView, FormView, ListView, DetailView
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import CourseEnrollForm
+from courses.models import Course
 
 
 class StudentRegistrationView(CreateView):
@@ -24,7 +25,7 @@ class StudentRegistrationView(CreateView):
 
 class StudentEnrollCourseView(LoginRequiredMixin,
                               FormView):
-    """Enrolls a student in the current course."""
+    """Enrolls a patient in the current course."""
 
     course = None
     form_class = CourseEnrollForm
@@ -37,3 +38,39 @@ class StudentEnrollCourseView(LoginRequiredMixin,
     def get_success_url(self):
         return reverse_lazy('student_course_detail',
                             args=[self.course.id])
+
+
+class StudentCourseListView(LoginRequiredMixin,
+                            ListView):
+    """Displays the courses the patient is enrolled in."""
+
+    model = Course
+    template_name = 'students/course/list.html'
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(students__in=[self.request.user])
+
+
+class StudentCourseDetailView(DetailView):
+    """Display selected course details."""
+
+    model = Course
+    template_name = 'students/course/detail.html'
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(students__in=[self.request.user])
+
+    def get_context_data(self, **kwargs):
+        """Defines a module to display by URL arguments."""
+
+        context = super().get_context_data(**kwargs)
+        course = self.get_object()
+        if 'module_id' in self.kwargs:
+            context['module'] = course.modules.get(
+                id=self.kwargs['module_id']
+            )
+        else:
+            context['module'] = course.modules.all()[0]
+
