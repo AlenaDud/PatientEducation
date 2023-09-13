@@ -1,12 +1,11 @@
 from rest_framework import generics, viewsets
 from courses.models import Subject, Course
-from courses.api.serializers import SubjectSerializer, CourseSerializer
-from django.shortcuts import get_object_or_404
-from rest_framework.views import APIView
+from courses.api.serializers import SubjectSerializer, CourseSerializer, CourseWithContentsSerializer
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
+from courses.api.permissions import IsEnrolled
 
 
 class SubjectListView(generics.ListAPIView):
@@ -23,10 +22,10 @@ class SubjectDetailView(generics.RetrieveAPIView):
 
 
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
-    """Retrieves list of courses or a course and
-    allow enrollment."""
+    """Retrieves list of courses or a course with contents
+     and allow enrollment."""
 
-    queryset = Course
+    queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
     @action(detail=True,
@@ -38,3 +37,10 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         course.students.add(request.user)
         return Response({'enrolled': True})
 
+    @action(detail=True,
+            methods=['get'],
+            serializer_class=CourseWithContentsSerializer,
+            authentication_classes=[BasicAuthentication],
+            permission_classes=[IsAuthenticated, IsEnrolled])
+    def contents(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
