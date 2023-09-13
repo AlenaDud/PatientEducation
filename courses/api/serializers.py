@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from courses.models import Subject, Course, Module
+from courses.models import Subject, Course, Module, Content
 
 
 class SubjectSerializer(serializers.ModelSerializer):
@@ -22,3 +22,6 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = ['id', 'subject', 'title', 'slug',
                   'overview', 'created', 'owner',
                   'modules']
+
+
+

@@ -1,11 +1,13 @@
-from rest_framework import generics
+from rest_framework import generics, viewsets
 from courses.models import Subject, Course
-from courses.api.serializers import SubjectSerializer
+from courses.api.serializers import SubjectSerializer, CourseSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+
 
 class SubjectListView(generics.ListAPIView):
     """Retrieves a list of subject."""
@@ -20,13 +22,19 @@ class SubjectDetailView(generics.RetrieveAPIView):
     serializer_class = SubjectSerializer
 
 
-class CourseEnrollView(APIView):
-    """Enrolls authorized patients in the current course."""
+class CourseViewSet(viewsets.ReadOnlyModelViewSet):
+    """Retrieves list of courses or a course and
+    allow enrollment."""
 
-    authentication_classes = [BasicAuthentication]
-    permission_classes = [IsAuthenticated]
+    queryset = Course
+    serializer_class = CourseSerializer
 
-    def post(self, request, pk, format=None):
-        course = get_object_or_404(Course, pk=pk)
+    @action(detail=True,
+            methods=['post'],
+            authentication_classes=[BasicAuthentication],
+            permission_classes=[IsAuthenticated])
+    def enroll(self, request, *args, **kwargs):
+        course = self.get_object()
         course.students.add(request.user)
         return Response({'enrolled': True})
+
