@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'chat.apps.ChatConfig',
     'courses.apps.CoursesConfig',
     'students.apps.StudentsConfig',
@@ -46,7 +47,8 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'embed_video',
     'redisboard',
-    'rest_framework'
+    'rest_framework',
+
 ]
 
 MIDDLEWARE = [
@@ -79,7 +81,10 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'mededucation.asgi.application'
+
 WSGI_APPLICATION = 'mededucation.wsgi.application'
+
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
