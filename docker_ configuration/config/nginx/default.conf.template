@@ -1,0 +1,44 @@
+upstream uwsgi_app {
+    server unix:/code/mededucation/uwsgi_app.sock;
+}
+
+upstream daphne {
+    server unix:/code/mededucation/daphne.sock;
+}
+
+server {
+        listen 80;
+        server_name www.patienteducation.com patienteducation.com;
+        return 301 https://$host$request_uri;
+        }
+
+server {
+        listen 443 ssl;
+        ssl_certificate /code/mededucation/ssl/mededucation.crt;
+        ssl_certificate_key /code/mededucation/ssl/mededucation.key;
+        server_name www.patienteducation.com patienteducation.com;
+        error_log stderr warn;
+        access_log /dev/stdout main;
+
+        location / {
+            include /etc/nginx/uwsgi_params;
+            uwsgi_pass uwsgi_app;
+        }
+
+        location /ws/ {
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_redirect off;
+            proxy_pass http://daphne;
+            }
+
+        location /static/ {
+            alias /code/mededucation/static/;
+        }
+        location /media/ {
+            alias /code/mededucation/media/;
+        }
+
+
+}
