@@ -29,7 +29,7 @@ their experiences
 
 1. First create empty directory.
 
-2. Next clone the repository from GitHub and switch to the new directory:
+2. Next clone the repository from GitHub:
 
     `$ git clone git@github.com/USERNAME/{{ project_name }}.git`
 3. Extract and move all files from docker_configuration into the root directory of your project.
